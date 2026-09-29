@@ -33,4 +33,8 @@ async fn server_boots_and_health_returns_200() {
         response.contains("HTTP/1.1 200"),
         "response must contain `HTTP/1.1 200`, got: {response}"
     );
+    assert!(
+        response.contains(r#""status":"ok""#),
+        "response must contain health body {{\"status\":\"ok\"}}, got: {response}"
+    );
 }
