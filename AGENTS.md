@@ -25,3 +25,17 @@
 
 - Коммиты — Conventional Commits: `feat:`, `fix:`, `chore:`, `ci:`, `docs:` (scope допустим: `feat(backend):`). Формат касается и коммитов агента: release-please строит из истории коммитов changelog и semver-версию.
 - Frontend — Next.js 16, отличается от привычной версии: перед правкой фронтенда читай гайд в `frontend/node_modules/next/dist/docs/` (блок правил автогенерируется `next dev` в `frontend/AGENTS.md`).
+
+## Agent skills
+
+### Issue tracker
+
+Задачи живут в GitHub Issues этого репозитория (через `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Пять канонических ролей разбора, строки меток 1:1. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` в корне репозитория. See `docs/agents/domain.md`.
