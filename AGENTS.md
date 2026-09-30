@@ -12,7 +12,12 @@
 | test  | `make test-backend` — `cargo test`                                                                | `make test-frontend` — `npm test` (vitest)     |
 | lint  | `make lint-backend` — `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings`           | `make lint-frontend` — `npm run lint` (ESLint) |
 
-Оба приложения разом: `make dev`, `make test`, `make lint`.
+Генерация из контракта — `make generate`: TypeSpec (`contracts/`) → OpenAPI
+(`openapi/`) → клиентский SDK (`frontend/src/client/`) и серверные типы
+(backend, OUT_DIR). Сгенерированные артефакты руками не править — только
+перегенерация; источник правды — контракт в `contracts/`.
+
+Оба приложения разом: `make dev`, `make test`, `make lint`; остановка dev-процессов — `make stop`.
 
 ## Структура
 
