@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend test test-backend test-frontend lint lint-backend lint-frontend
+.PHONY: dev dev-backend dev-frontend test test-backend test-frontend lint lint-backend lint-frontend generate
 
 dev:
 	@cd backend && cargo run &
@@ -10,6 +10,11 @@ dev-backend:
 
 dev-frontend:
 	cd frontend && npm run dev
+
+generate:
+	cd contracts && npx tsp compile .
+	cd frontend && npm run generate:client
+	cd backend && cargo build
 
 test: test-backend test-frontend
 
