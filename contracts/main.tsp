@@ -71,6 +71,6 @@ namespace Booking {
   @route("/bookings")
   interface Bookings {
     @get list(): Booking[];
-    @post create(@body body: Booking): Booking | ConflictError | NotFoundError;
+    @post create(@body body: Booking): Booking | ConflictError | NotFoundError | ValidationError;
   }
 }

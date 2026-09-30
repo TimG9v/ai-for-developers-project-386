@@ -75,6 +75,10 @@ export type BookingsCreateData = {
 
 export type BookingsCreateErrors = {
     /**
+     * Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.
+     */
+    400: unknown;
+    /**
      * Слот или тип встречи не найдены.
      */
     404: unknown;

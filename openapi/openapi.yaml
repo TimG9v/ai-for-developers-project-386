@@ -27,6 +27,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
+        '400':
+          description: 'Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.'
         '404':
           description: Слот или тип встречи не найдены.
         '409':
