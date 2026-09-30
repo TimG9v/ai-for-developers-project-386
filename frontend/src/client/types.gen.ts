@@ -116,6 +116,13 @@ export type EventTypesCreateData = {
     url: '/event-types';
 };
 
+export type EventTypesCreateErrors = {
+    /**
+     * Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.
+     */
+    400: unknown;
+};
+
 export type EventTypesCreateResponses = {
     /**
      * The request has succeeded.

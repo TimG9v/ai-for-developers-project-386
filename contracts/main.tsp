@@ -48,11 +48,16 @@ namespace Booking {
     @statusCode statusCode: 404;
   }
 
+  @doc("Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.")
+  model ValidationError {
+    @statusCode statusCode: 400;
+  }
+
   @doc("Типы встреч: создаёт владелец, смотрят все.")
   @route("/event-types")
   interface EventTypes {
     @get list(): EventType[];
-    @post create(@body body: EventType): EventType;
+    @post create(@body body: EventType): EventType | ValidationError;
   }
 
   @doc("Слоты: публикует владелец. Свободные слоты выдаются в окне 14 дней от текущей даты.")

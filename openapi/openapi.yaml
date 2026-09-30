@@ -60,6 +60,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventType'
+        '400':
+          description: 'Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.'
       requestBody:
         required: true
         content:
