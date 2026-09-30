@@ -1,13 +1,18 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/src/client", () => ({
+  eventTypesList: vi.fn(async () => ({ data: [] })),
+  eventTypesCreate: vi.fn(),
+}));
 
 import Page from "@/app/admin/page";
 
 afterEach(cleanup);
 
 describe("admin page", () => {
-  it("renders the page heading", () => {
-    render(<Page />);
+  it("renders the page heading", async () => {
+    render(await Page());
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Админка" }),
