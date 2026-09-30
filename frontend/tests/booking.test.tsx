@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/src/client", () => ({
   eventTypesList: vi.fn(async () => ({ data: [] })),
+  slotsList: vi.fn(),
 }));
 
 import Page from "@/app/booking/page";

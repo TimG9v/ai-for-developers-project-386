@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/src/client", () => ({
   eventTypesList: vi.fn(async () => ({ data: [] })),
   eventTypesCreate: vi.fn(),
+  slotsCreate: vi.fn(),
+  slotsList: vi.fn(),
 }));
 
 import Page from "@/app/admin/page";

@@ -5,6 +5,7 @@ const eventTypesList = vi.fn();
 
 vi.mock("@/src/client", () => ({
   eventTypesList: (...args: unknown[]) => eventTypesList(...args),
+  slotsList: vi.fn(),
 }));
 
 import Page from "@/app/booking/page";

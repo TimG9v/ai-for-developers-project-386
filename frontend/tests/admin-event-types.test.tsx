@@ -7,6 +7,8 @@ const eventTypesCreate = vi.fn();
 vi.mock("@/src/client", () => ({
   eventTypesList: (...args: unknown[]) => eventTypesList(...args),
   eventTypesCreate: (...args: unknown[]) => eventTypesCreate(...args),
+  slotsCreate: vi.fn(),
+  slotsList: vi.fn(),
 }));
 
 import { AdminEventTypes } from "@/components/admin-event-types";
