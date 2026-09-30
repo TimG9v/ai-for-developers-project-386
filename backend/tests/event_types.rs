@@ -1,49 +1,15 @@
-//! HTTP-шов: GET /event-types отдаёт список типов встреч в форме контракта.
+//! HTTP-шов: GET/POST /event-types — список и создание типов встреч в форме контракта.
 //! Хранение in-memory, состояние подставляется через app_with_state.
+
+mod common;
+
+use std::sync::Arc;
 
 use backend::api::api_types::EventType;
 use backend::domain::EventTypesRepository;
-use backend::infra::InMemoryEventTypes;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use backend::infra::{InMemoryEventTypes, InMemorySlots};
 
-const EVENT_TYPES_REQUEST: &str =
-    "GET /event-types HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n";
-
-fn post_event_types_request(body: &str) -> String {
-    format!(
-        "POST /event-types HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
-        body.len(),
-        body
-    )
-}
-
-async fn send(router: axum::Router, request: &str) -> String {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-        .await
-        .expect("bind to random port");
-    let addr = listener
-        .local_addr()
-        .expect("read actual port from listener");
-
-    tokio::spawn(async move {
-        axum::serve(listener, router).await.expect("serve");
-    });
-
-    let mut stream = tokio::net::TcpStream::connect(addr)
-        .await
-        .expect("connect to server");
-    stream
-        .write_all(request.as_bytes())
-        .await
-        .expect("write request");
-
-    let mut response = Vec::new();
-    stream
-        .read_to_end(&mut response)
-        .await
-        .expect("read response");
-    String::from_utf8_lossy(&response).into_owned()
-}
+const EVENT_TYPES_REQUEST: &str = "/event-types";
 
 #[tokio::test]
 async fn event_types_list_returns_seeded_types_as_contract_json() {
@@ -61,14 +27,15 @@ async fn event_types_list_returns_seeded_types_as_contract_json() {
         duration_minutes: 60,
     });
     let app = backend::app_with_state(backend::AppState {
-        event_types: std::sync::Arc::new(repo),
+        event_types: Arc::new(repo),
+        slots: Arc::new(InMemorySlots::new()),
     });
 
-    let raw = send(app, EVENT_TYPES_REQUEST).await;
+    let raw = common::send(app, &common::get_request(EVENT_TYPES_REQUEST)).await;
 
     assert!(raw.contains("HTTP/1.1 200"), "got: {raw}");
-    let body = raw.split("\r\n\r\n").nth(1).expect("response body");
-    let json: serde_json::Value = serde_json::from_str(body).expect("JSON-тело");
+    let json: serde_json::Value =
+        serde_json::from_str(common::response_body(&raw)).expect("JSON-тело");
     let items = json.as_array().expect("EventType[]");
 
     assert_eq!(items.len(), 2);
@@ -87,11 +54,14 @@ async fn event_types_list_returns_seeded_types_as_contract_json() {
 
 #[tokio::test]
 async fn event_types_list_on_empty_storage_returns_empty_array() {
-    let raw = send(backend::app(), EVENT_TYPES_REQUEST).await;
+    let raw = common::send(backend::app(), &common::get_request(EVENT_TYPES_REQUEST)).await;
 
     assert!(raw.contains("HTTP/1.1 200"), "got: {raw}");
-    let body = raw.split("\r\n\r\n").nth(1).expect("response body");
-    assert_eq!(body.trim(), "[]", "пустое хранилище — валидный список");
+    assert_eq!(
+        common::response_body(&raw).trim(),
+        "[]",
+        "пустое хранилище — валидный список"
+    );
 }
 
 #[tokio::test]
@@ -99,18 +69,22 @@ async fn event_types_create_returns_created_type_and_it_is_listed() {
     let app = backend::app();
     let body = r#"{"id":"et2","title":"Созвон","durationMinutes":15}"#;
 
-    let raw = send(app.clone(), &post_event_types_request(body)).await;
+    let raw = common::send(
+        app.clone(),
+        &common::post_request(EVENT_TYPES_REQUEST, body),
+    )
+    .await;
 
     assert!(raw.contains("HTTP/1.1 200"), "got: {raw}");
-    let response_body = raw.split("\r\n\r\n").nth(1).expect("response body");
-    let created: serde_json::Value = serde_json::from_str(response_body).expect("JSON-тело");
+    let created: serde_json::Value =
+        serde_json::from_str(common::response_body(&raw)).expect("JSON-тело");
     assert_eq!(created["id"], "et2");
     assert_eq!(created["title"], "Созвон");
     assert_eq!(created["durationMinutes"], 15);
 
-    let raw = send(app, EVENT_TYPES_REQUEST).await;
-    let body = raw.split("\r\n\r\n").nth(1).expect("response body");
-    let json: serde_json::Value = serde_json::from_str(body).expect("JSON-тело");
+    let raw = common::send(app, &common::get_request(EVENT_TYPES_REQUEST)).await;
+    let json: serde_json::Value =
+        serde_json::from_str(common::response_body(&raw)).expect("JSON-тело");
     let items = json.as_array().expect("EventType[]");
     assert_eq!(items.len(), 1, "созданный тип появляется в списке: {json}");
     assert_eq!(items[0]["title"], "Созвон");
@@ -136,17 +110,20 @@ async fn event_types_create_rejects_invalid_input_with_400() {
     let app = backend::app();
 
     for body in invalid_bodies {
-        let raw = send(app.clone(), &post_event_types_request(body)).await;
+        let raw = common::send(
+            app.clone(),
+            &common::post_request(EVENT_TYPES_REQUEST, body),
+        )
+        .await;
         assert!(
             raw.contains("HTTP/1.1 400"),
             "тело {body} должно отклоняться 400, got: {raw}"
         );
     }
 
-    let raw = send(app, EVENT_TYPES_REQUEST).await;
-    let body = raw.split("\r\n\r\n").nth(1).expect("response body");
+    let raw = common::send(app, &common::get_request(EVENT_TYPES_REQUEST)).await;
     assert_eq!(
-        body.trim(),
+        common::response_body(&raw).trim(),
         "[]",
         "отклонённые типы не должны попадать в список"
     );
