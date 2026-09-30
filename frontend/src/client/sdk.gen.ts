@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BookingsCreateData, BookingsCreateErrors, BookingsCreateResponses, BookingsListData, BookingsListResponses, EventTypesCreateData, EventTypesCreateErrors, EventTypesCreateResponses, EventTypesListData, EventTypesListResponses, SlotsCreateData, SlotsCreateResponses, SlotsListData, SlotsListResponses } from './types.gen';
+import type { BookingsCreateData, BookingsCreateErrors, BookingsCreateResponses, BookingsListData, BookingsListResponses, EventTypesCreateData, EventTypesCreateErrors, EventTypesCreateResponses, EventTypesListData, EventTypesListResponses, SlotsCreateData, SlotsCreateErrors, SlotsCreateResponses, SlotsListData, SlotsListResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -42,7 +42,7 @@ export const eventTypesCreate = <ThrowOnError extends boolean = false>(options: 
 
 export const slotsList = <ThrowOnError extends boolean = false>(options?: Options<SlotsListData, ThrowOnError>): RequestResult<SlotsListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<SlotsListResponses, unknown, ThrowOnError>({ url: '/slots', ...options });
 
-export const slotsCreate = <ThrowOnError extends boolean = false>(options: Options<SlotsCreateData, ThrowOnError>): RequestResult<SlotsCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<SlotsCreateResponses, unknown, ThrowOnError>({
+export const slotsCreate = <ThrowOnError extends boolean = false>(options: Options<SlotsCreateData, ThrowOnError>): RequestResult<SlotsCreateResponses, SlotsCreateErrors, ThrowOnError> => (options.client ?? client).post<SlotsCreateResponses, SlotsCreateErrors, ThrowOnError>({
     url: '/slots',
     ...options,
     headers: {

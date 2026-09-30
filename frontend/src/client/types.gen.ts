@@ -157,6 +157,17 @@ export type SlotsCreateData = {
     url: '/slots';
 };
 
+export type SlotsCreateErrors = {
+    /**
+     * Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.
+     */
+    400: unknown;
+    /**
+     * Слот или тип встречи не найдены.
+     */
+    404: unknown;
+};
+
 export type SlotsCreateResponses = {
     /**
      * The request has succeeded.

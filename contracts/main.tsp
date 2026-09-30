@@ -64,7 +64,7 @@ namespace Booking {
   @route("/slots")
   interface Slots {
     @get list(@query eventTypeId?: string): Slot[];
-    @post create(@body body: Slot): Slot;
+    @post create(@body body: Slot): Slot | ValidationError | NotFoundError;
   }
 
   @doc("Записи: список — ракурс владельца (все типы встреч); создание — действие гостя.")
