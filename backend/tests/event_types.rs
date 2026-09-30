@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use backend::api::api_types::EventType;
 use backend::domain::EventTypesRepository;
-use backend::infra::{InMemoryEventTypes, InMemorySlots};
+use backend::infra::{InMemoryBookings, InMemoryEventTypes, InMemorySlots};
 
 const EVENT_TYPES_REQUEST: &str = "/event-types";
 
@@ -29,6 +29,7 @@ async fn event_types_list_returns_seeded_types_as_contract_json() {
     let app = backend::app_with_state(backend::AppState {
         event_types: Arc::new(repo),
         slots: Arc::new(InMemorySlots::new()),
+        bookings: Arc::new(InMemoryBookings::new()),
     });
 
     let raw = common::send(app, &common::get_request(EVENT_TYPES_REQUEST)).await;

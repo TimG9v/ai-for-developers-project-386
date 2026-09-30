@@ -9,19 +9,20 @@ use axum::{
     extract::{Query, State, rejection::JsonRejection},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::get,
+    routing::{get, post},
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::api::api_types::{EventType, Slot};
-use crate::domain::{EventTypesRepository, SlotsRepository};
+use crate::api::api_types::{Booking, EventType, Slot};
+use crate::domain::{BookingsRepository, EventTypesRepository, SlotsRepository};
 
 /// Состояние приложения: репозитории, с которыми собран роутер.
 #[derive(Clone)]
 pub struct AppState {
     pub event_types: Arc<dyn EventTypesRepository>,
     pub slots: Arc<dyn SlotsRepository>,
+    pub bookings: Arc<dyn BookingsRepository>,
 }
 
 #[derive(Serialize)]
@@ -34,6 +35,7 @@ pub fn app() -> Router {
     app_with_state(AppState {
         event_types: Arc::new(infra::InMemoryEventTypes::new()),
         slots: Arc::new(infra::InMemorySlots::new()),
+        bookings: Arc::new(infra::InMemoryBookings::new()),
     })
 }
 
@@ -46,6 +48,7 @@ pub fn app_with_state(state: AppState) -> Router {
             get(list_event_types).post(create_event_type),
         )
         .route("/slots", get(list_slots).post(create_slot))
+        .route("/bookings", post(create_booking))
         .with_state(state)
 }
 
@@ -95,6 +98,7 @@ async fn list_slots(State(state): State<AppState>, query: Query<SlotsQuery>) -> 
                 .is_none_or(|id| slot.event_type_id == id)
         })
         .filter(|slot| domain::is_within_booking_window(slot.start_date_time, now))
+        .filter(|slot| !state.bookings.contains_slot(&slot.id))
         .collect();
     Json(slots)
 }
@@ -117,4 +121,27 @@ async fn create_slot(
     }
     state.slots.add(slot.clone());
     Json(slot).into_response()
+}
+
+/// Запись гостя на слот. Несуществующий слот — контрактный 404, пустое
+/// имя/email или слот вне окна — контрактный 400, занятый слот — 409:
+/// проверка занятости и вставка атомарны (insert-if-absent).
+async fn create_booking(
+    State(state): State<AppState>,
+    booking: Result<Json<Booking>, JsonRejection>,
+) -> Response {
+    let booking = match booking {
+        Ok(Json(booking)) => booking,
+        Err(_) => return StatusCode::BAD_REQUEST.into_response(),
+    };
+    let Some(slot) = state.slots.get(&booking.slot_id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    if domain::validate_booking(&booking, &slot, Utc::now()).is_err() {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+    if !state.bookings.try_add(booking.clone()) {
+        return StatusCode::CONFLICT.into_response();
+    }
+    Json(booking).into_response()
 }

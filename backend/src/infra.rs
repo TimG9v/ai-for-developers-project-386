@@ -3,8 +3,8 @@
 
 use std::sync::Mutex;
 
-use crate::api::api_types::{EventType, Slot};
-use crate::domain::{EventTypesRepository, SlotsRepository};
+use crate::api::api_types::{Booking, EventType, Slot};
+use crate::domain::{BookingsRepository, EventTypesRepository, SlotsRepository};
 
 #[derive(Default)]
 pub struct InMemoryEventTypes {
@@ -55,7 +55,51 @@ impl SlotsRepository for InMemorySlots {
         self.items.lock().expect("slots lock").clone()
     }
 
+    fn get(&self, id: &str) -> Option<Slot> {
+        self.items
+            .lock()
+            .expect("slots lock")
+            .iter()
+            .find(|slot| slot.id == id)
+            .cloned()
+    }
+
     fn add(&self, slot: Slot) {
         self.items.lock().expect("slots lock").push(slot);
+    }
+}
+
+#[derive(Default)]
+pub struct InMemoryBookings {
+    items: Mutex<Vec<Booking>>,
+}
+
+impl InMemoryBookings {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl BookingsRepository for InMemoryBookings {
+    fn try_add(&self, booking: Booking) -> bool {
+        // Проверка занятости и вставка — под одной блокировкой:
+        // два одновременных запроса не создадут вторую запись.
+        let mut items = self.items.lock().expect("bookings lock");
+        if items
+            .iter()
+            .any(|existing| existing.slot_id == booking.slot_id)
+        {
+            return false;
+        }
+        items.push(booking);
+        true
+    }
+
+    fn contains_slot(&self, slot_id: &str) -> bool {
+        self.items
+            .lock()
+            .expect("bookings lock")
+            .iter()
+            .any(|booking| booking.slot_id == slot_id)
     }
 }
