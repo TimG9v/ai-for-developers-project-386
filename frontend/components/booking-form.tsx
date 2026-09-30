@@ -2,32 +2,32 @@
 
 import { useState, type FormEvent } from "react";
 
-import { bookingsCreate, type EventType, type Slot } from "@/src/client";
+import { bookingsCreate, type Slot } from "@/src/client";
 
 import { formatSlotInterval } from "@/lib/slot-time";
 
-type BookingFormError = "empty-fields" | "conflict" | "not-found" | "rejected";
+type BookingFormError = "empty-fields";
 
 const ERROR_MESSAGES: Record<BookingFormError, string> = {
   "empty-fields": "Укажите имя и email",
-  conflict: "Это время уже занято. Выберите другой слот",
-  "not-found": "Этот слот больше не доступен — предложение устарело. Обновите страницу",
-  rejected: "Не удалось создать запись: сервер отклонил данные",
 };
 
 /**
  * Форма записи гостя на выбранный слот: имя и email обязательны (проверяются
- * формой и сервером). Об успехе сообщает родитель (onBooked): 409 — понятное
- * сообщение занятости (история 11); 404 — устаревшая ссылка (история 12).
+ * формой и сервером). Успех и отказ сервера (409 занятость — история 11,
+ * 404 устаревшая ссылка — история 12) обрабатывает родитель: календарь
+ * перезагружается, сообщения переживают обновление списка.
  */
 export function BookingForm({
   slot,
-  eventType,
   onBooked,
+  onRejected,
 }: {
   slot: Slot;
-  eventType: EventType | undefined;
+  /** Успех: родитель показывает подтверждение и обновляет календарь. */
   onBooked: (guestEmail: string) => void;
+  /** Отказ сервера: родитель показывает сообщение и обновляет календарь. */
+  onRejected: (status: number | undefined) => void;
 }) {
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -55,14 +55,7 @@ export function BookingForm({
       },
     });
     if (createError !== undefined) {
-      const status = (createError as { status?: number }).status;
-      if (status === 409) {
-        setError("conflict");
-      } else if (status === 404) {
-        setError("not-found");
-      } else {
-        setError("rejected");
-      }
+      onRejected((createError as { status?: number }).status);
       return;
     }
 

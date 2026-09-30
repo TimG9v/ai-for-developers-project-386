@@ -108,22 +108,35 @@ describe("booking form", () => {
     expect(bookingsCreate).not.toHaveBeenCalled();
   });
 
-  it("explains a 409 as slot already taken", async () => {
+  it("explains a 409 as slot already taken and refreshes the calendar", async () => {
     bookingsCreate.mockResolvedValueOnce({ data: undefined, error: { status: 409 } });
 
     await renderWithFreeSlot();
+    // После 409 календарь перезагружается: занятый слот исчезает.
+    slotsList.mockResolvedValueOnce({ data: [] });
     fireEvent.change(screen.getByLabelText("Имя"), { target: { value: "Гость" } });
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "g@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Записаться" }));
+
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toBeTruthy();
+      expect(screen.getByRole("alert").textContent).toContain("уже занято");
     });
+    await waitFor(() => {
+      expect(slotsList).toHaveBeenCalledTimes(2);
+    });
+    expect(
+      screen.queryByRole("button", {
+        name: `Записаться на ${formatSlotInterval(slotStart, slotEnd)}`,
+      }),
+    ).toBeNull();
   });
 
   it("explains a 404 as an outdated offer", async () => {
     bookingsCreate.mockResolvedValueOnce({ data: undefined, error: { status: 404 } });
 
     await renderWithFreeSlot();
+    // Отказ сервера тоже перезагружает календарь: слот мог исчезнуть.
+    slotsList.mockResolvedValueOnce({ data: [] });
     fireEvent.change(screen.getByLabelText("Имя"), { target: { value: "Гость" } });
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "g@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Записаться" }));

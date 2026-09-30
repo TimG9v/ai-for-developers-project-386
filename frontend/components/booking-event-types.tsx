@@ -27,6 +27,7 @@ export function BookingEventTypes({
     interval: string;
     email: string;
   } | null>(null);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const selectedEventType = initialEventTypes.find(
     (eventType) => eventType.id === selectedEventTypeId,
@@ -37,15 +38,40 @@ export function BookingEventTypes({
     setSelectedEventTypeId(eventTypeId);
     setSelectedSlotId(null);
     setConfirmation(null);
+    setBookingError(null);
     const { data } = await slotsList({ query: { eventTypeId } });
     setSlots(data ?? []);
   }, []);
 
-  const reloadSlots = useCallback(
-    async (guestEmail: string) => {
-      if (selectedEventTypeId === null) {
-        return;
-      }
+  const refreshCalendar = useCallback(async () => {
+    if (selectedEventTypeId === null) {
+      return;
+    }
+    // Занятый слот сервер больше не отдаёт — календарь обновляется.
+    const result = await slotsList({ query: { eventTypeId: selectedEventTypeId } });
+    setSlots(result?.data ?? []);
+    setSelectedSlotId(null);
+  }, [selectedEventTypeId]);
+
+  const handleRejected = useCallback(
+    (status: number | undefined) => {
+      // История 11: понятное сообщение занятости; история 12: устаревшее
+      // предложение. Календарь перезагружается — занятый слот исчезает.
+      setBookingError(
+        status === 409
+          ? "Это время уже занято. Выберите другой слот"
+          : status === 404
+            ? "Этот слот больше не доступен — предложение устарело. Обновите страницу"
+            : "Не удалось создать запись: сервер отклонил данные",
+      );
+      void refreshCalendar();
+    },
+    [refreshCalendar],
+  );
+
+  const handleBooked = useCallback(
+    (guestEmail: string) => {
+      setBookingError(null);
       const slot = slots.find((item) => item.id === selectedSlotId);
       if (slot) {
         setConfirmation({
@@ -57,12 +83,9 @@ export function BookingEventTypes({
           email: guestEmail,
         });
       }
-      // Занятый слот сервер больше не отдаёт — календарь обновляется.
-      const { data } = await slotsList({ query: { eventTypeId: selectedEventTypeId } });
-      setSlots(data ?? []);
-      setSelectedSlotId(null);
+      void refreshCalendar();
     },
-    [selectedEventTypeId, selectedEventType, slots, selectedSlotId],
+    [refreshCalendar, selectedEventType, slots, selectedSlotId],
   );
 
   if (initialEventTypes.length === 0) {
@@ -153,16 +176,22 @@ export function BookingEventTypes({
           </h3>
           <p className="text-muted-foreground">{confirmation.interval}</p>
           <p className="text-sm text-muted-foreground">
-            Подтверждение отправлено на {confirmation.email}
+            Данные записи: {confirmation.email}
           </p>
         </div>
+      )}
+
+      {bookingError && (
+        <p role="alert" className="text-destructive">
+          {bookingError}
+        </p>
       )}
 
       {selectedSlot && (
         <BookingForm
           slot={selectedSlot}
-          eventType={selectedEventType}
-          onBooked={(guestEmail) => void reloadSlots(guestEmail)}
+          onBooked={handleBooked}
+          onRejected={handleRejected}
         />
       )}
     </div>

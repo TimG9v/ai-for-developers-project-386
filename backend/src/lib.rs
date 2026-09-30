@@ -83,8 +83,8 @@ struct SlotsQuery {
     event_type_id: Option<String>,
 }
 
-/// Календарь записи: только свободные слоты выбранного типа в окне 14 дней.
-/// Записей пока нет (#17) — «свободный» означает «существует и в окне».
+/// Календарь записи: свободные слоты выбранного типа в окне 14 дней;
+/// занятые (с записью) не отдаются (история 14).
 async fn list_slots(State(state): State<AppState>, query: Query<SlotsQuery>) -> Json<Vec<Slot>> {
     let now: DateTime<Utc> = Utc::now();
     let slots = state
