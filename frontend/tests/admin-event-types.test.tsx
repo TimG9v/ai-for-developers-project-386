@@ -61,6 +61,33 @@ describe("admin page creates event types", () => {
     expect(screen.getByText("15 мин.")).toBeTruthy();
   });
 
+  it("trims title and description before sending", async () => {
+    const created = {
+      id: "et10",
+      title: "Созвон",
+      description: "Короткий звонок",
+      durationMinutes: 15,
+    };
+    eventTypesCreate.mockResolvedValueOnce({ data: created });
+    eventTypesList.mockResolvedValueOnce({ data: [created] });
+
+    render(<AdminEventTypes initialEventTypes={[]} />);
+    fillForm({ title: "  Созвон  ", description: " Короткий звонок " });
+    submit();
+
+    await waitFor(() => {
+      expect(eventTypesCreate).toHaveBeenCalledTimes(1);
+    });
+    expect(eventTypesCreate).toHaveBeenCalledWith({
+      body: {
+        id: expect.any(String),
+        title: "Созвон",
+        description: "Короткий звонок",
+        durationMinutes: 15,
+      },
+    });
+  });
+
   it("blocks submit when title is empty", async () => {
     render(<AdminEventTypes initialEventTypes={[]} />);
     fillForm({ title: "" });

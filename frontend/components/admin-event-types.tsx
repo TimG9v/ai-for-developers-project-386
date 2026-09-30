@@ -40,8 +40,10 @@ export function AdminEventTypes({
     const { error } = await eventTypesCreate({
       body: {
         id: crypto.randomUUID(),
-        title,
-        ...(description.trim() === "" ? {} : { description }),
+        title: title.trim(),
+        ...(description.trim() === ""
+          ? {}
+          : { description: description.trim() }),
         durationMinutes,
       },
     });
