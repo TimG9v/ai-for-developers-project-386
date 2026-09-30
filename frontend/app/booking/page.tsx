@@ -1,5 +1,9 @@
 import { eventTypesList } from "@/src/client";
 
+// Список типов встреч меняется в рантайме (in-memory хранилище) —
+// статический пререндер запёк бы пустой список на этапе сборки.
+export const dynamic = "force-dynamic";
+
 export default async function BookingPage() {
   const { data } = await eventTypesList();
   const eventTypes = data ?? [];
