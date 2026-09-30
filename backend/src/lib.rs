@@ -109,10 +109,10 @@ async fn create_slot(
         Ok(Json(slot)) => slot,
         Err(_) => return StatusCode::BAD_REQUEST.into_response(),
     };
-    if state.event_types.get(&slot.event_type_id).is_none() {
+    let Some(event_type) = state.event_types.get(&slot.event_type_id) else {
         return StatusCode::NOT_FOUND.into_response();
-    }
-    if domain::validate_slot(&slot, Utc::now()).is_err() {
+    };
+    if domain::validate_slot(&slot, Utc::now(), &event_type).is_err() {
         return StatusCode::BAD_REQUEST.into_response();
     }
     state.slots.add(slot.clone());

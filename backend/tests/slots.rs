@@ -177,6 +177,27 @@ async fn slots_create_accepts_day_14_boundary() {
 }
 
 #[tokio::test]
+async fn slots_create_rejects_duration_mismatch_with_type_400() {
+    // Словарь: «длительность слота определяется его типом встречи» —
+    // сервер обязан отклонять интервал, не равный длительности типа.
+    let state = seeded_state();
+    let start = Utc::now() + Duration::days(1);
+    let app = backend::app_with_state(state.clone());
+
+    let body = slot_body(
+        "et1",
+        start,
+        start + Duration::minutes(45), // у et1 длительность 30 мин
+    );
+    let raw = common::send(app, &common::post_request("/slots", &body)).await;
+
+    assert!(
+        raw.contains("HTTP/1.1 400"),
+        "интервал не по длительности типа должен отклоняться 400, got: {raw}"
+    );
+}
+
+#[tokio::test]
 async fn slots_list_returns_only_slots_of_type_within_window() {
     let state = seeded_state();
     let slots_repo = InMemorySlots::new();
@@ -209,6 +230,13 @@ async fn slots_list_returns_only_slots_of_type_within_window() {
         now - Duration::hours(2),
         now - Duration::hours(2) + Duration::minutes(30),
     ));
+    // Нужный тип, в окне на границе — 14-й день виден в списке
+    slots_repo.add(slot(
+        "s5",
+        "et1",
+        now + Duration::days(14),
+        now + Duration::days(14) + Duration::minutes(30),
+    ));
     let state = backend::AppState {
         slots: Arc::new(slots_repo),
         ..state
@@ -226,8 +254,8 @@ async fn slots_list_returns_only_slots_of_type_within_window() {
         .collect();
     assert_eq!(
         ids,
-        vec!["s1"],
-        "только слоты выбранного типа в окне: {items}"
+        vec!["s1", "s5"],
+        "только слоты выбранного типа в окне, 14-й день виден: {items}"
     );
 
     let raw = common::send(app, &common::get_request("/slots?eventTypeId=ghost")).await;

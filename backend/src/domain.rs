@@ -53,15 +53,26 @@ pub fn is_within_booking_window(start: DateTime<Utc>, now: DateTime<Utc>) -> boo
 pub enum SlotValidationError {
     EndBeforeStart,
     OutsideBookingWindow,
+    DurationMismatch,
 }
 
-/// Серверная валидация слота: интервал непустой, начало в окне 14 дней.
-pub fn validate_slot(slot: &Slot, now: DateTime<Utc>) -> Result<(), SlotValidationError> {
+/// Серверная валидация слота: интервал непустой, начало в окне 14 дней,
+/// длительность интервала равна длительности типа встречи
+/// (словарь: «длительность слота определяется его типом встречи»).
+pub fn validate_slot(
+    slot: &Slot,
+    now: DateTime<Utc>,
+    event_type: &EventType,
+) -> Result<(), SlotValidationError> {
     if slot.end_date_time <= slot.start_date_time {
         return Err(SlotValidationError::EndBeforeStart);
     }
     if !is_within_booking_window(slot.start_date_time, now) {
         return Err(SlotValidationError::OutsideBookingWindow);
+    }
+    let actual_minutes = (slot.end_date_time - slot.start_date_time).num_minutes();
+    if actual_minutes != i64::from(event_type.duration_minutes) {
+        return Err(SlotValidationError::DurationMismatch);
     }
     Ok(())
 }
