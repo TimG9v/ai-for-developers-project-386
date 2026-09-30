@@ -2,11 +2,20 @@
 //! Хранение in-memory, состояние подставляется через app_with_state.
 
 use backend::api::api_types::EventType;
+use backend::domain::EventTypesRepository;
 use backend::infra::InMemoryEventTypes;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 const EVENT_TYPES_REQUEST: &str =
     "GET /event-types HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n";
+
+fn post_event_types_request(body: &str) -> String {
+    format!(
+        "POST /event-types HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+        body.len(),
+        body
+    )
+}
 
 async fn send(router: axum::Router, request: &str) -> String {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
@@ -83,4 +92,62 @@ async fn event_types_list_on_empty_storage_returns_empty_array() {
     assert!(raw.contains("HTTP/1.1 200"), "got: {raw}");
     let body = raw.split("\r\n\r\n").nth(1).expect("response body");
     assert_eq!(body.trim(), "[]", "пустое хранилище — валидный список");
+}
+
+#[tokio::test]
+async fn event_types_create_returns_created_type_and_it_is_listed() {
+    let app = backend::app();
+    let body = r#"{"id":"et2","title":"Созвон","durationMinutes":15}"#;
+
+    let raw = send(app.clone(), &post_event_types_request(body)).await;
+
+    assert!(raw.contains("HTTP/1.1 200"), "got: {raw}");
+    let response_body = raw.split("\r\n\r\n").nth(1).expect("response body");
+    let created: serde_json::Value = serde_json::from_str(response_body).expect("JSON-тело");
+    assert_eq!(created["id"], "et2");
+    assert_eq!(created["title"], "Созвон");
+    assert_eq!(created["durationMinutes"], 15);
+
+    let raw = send(app, EVENT_TYPES_REQUEST).await;
+    let body = raw.split("\r\n\r\n").nth(1).expect("response body");
+    let json: serde_json::Value = serde_json::from_str(body).expect("JSON-тело");
+    let items = json.as_array().expect("EventType[]");
+    assert_eq!(items.len(), 1, "созданный тип появляется в списке: {json}");
+    assert_eq!(items[0]["title"], "Созвон");
+}
+
+#[tokio::test]
+async fn event_types_create_rejects_invalid_input_with_400() {
+    let invalid_bodies = [
+        // пустое название
+        r#"{"id":"e1","title":"","durationMinutes":30}"#,
+        // название из пробелов
+        r#"{"id":"e2","title":"   ","durationMinutes":30}"#,
+        // нулевая длительность
+        r#"{"id":"e3","title":"X","durationMinutes":0}"#,
+        // отрицательная длительность
+        r#"{"id":"e4","title":"X","durationMinutes":-5}"#,
+        // отсутствуют обязательные поля
+        r#"{}"#,
+        r#"{"id":"e5","title":"X"}"#,
+        // вовсе не JSON
+        "not json",
+    ];
+    let app = backend::app();
+
+    for body in invalid_bodies {
+        let raw = send(app.clone(), &post_event_types_request(body)).await;
+        assert!(
+            raw.contains("HTTP/1.1 400"),
+            "тело {body} должно отклоняться 400, got: {raw}"
+        );
+    }
+
+    let raw = send(app, EVENT_TYPES_REQUEST).await;
+    let body = raw.split("\r\n\r\n").nth(1).expect("response body");
+    assert_eq!(
+        body.trim(),
+        "[]",
+        "отклонённые типы не должны попадать в список"
+    );
 }

@@ -15,18 +15,17 @@ impl InMemoryEventTypes {
     pub fn new() -> Self {
         Self::default()
     }
-
-    /// Добавляет тип встречи: сеем в тестах; создание владельцем придёт с #15.
-    pub fn add(&self, event_type: EventType) {
-        self.items
-            .lock()
-            .expect("event types lock")
-            .push(event_type);
-    }
 }
 
 impl EventTypesRepository for InMemoryEventTypes {
     fn list(&self) -> Vec<EventType> {
         self.items.lock().expect("event types lock").clone()
+    }
+
+    fn add(&self, event_type: EventType) {
+        self.items
+            .lock()
+            .expect("event types lock")
+            .push(event_type);
     }
 }

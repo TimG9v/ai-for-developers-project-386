@@ -4,9 +4,16 @@ pub mod infra;
 
 use std::sync::Arc;
 
-use axum::{Json, Router, extract::State, routing::get};
+use axum::{
+    Json, Router,
+    extract::{State, rejection::JsonRejection},
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    routing::get,
+};
 use serde::Serialize;
 
+use crate::api::api_types::EventType;
 use crate::domain::EventTypesRepository;
 
 /// Состояние приложения: репозитории, с которыми собран роутер.
@@ -31,7 +38,10 @@ pub fn app() -> Router {
 pub fn app_with_state(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health))
-        .route("/event-types", get(list_event_types))
+        .route(
+            "/event-types",
+            get(list_event_types).post(create_event_type),
+        )
         .with_state(state)
 }
 
@@ -41,4 +51,21 @@ async fn health() -> Json<HealthStatus> {
 
 async fn list_event_types(State(state): State<AppState>) -> Json<Vec<api::api_types::EventType>> {
     Json(state.event_types.list())
+}
+
+/// Создание типа встречи владельцем. Невалидный ввод — контрактный 400:
+/// и нераспарсиваемое тело, и нарушение правил домена.
+async fn create_event_type(
+    State(state): State<AppState>,
+    event_type: Result<Json<EventType>, JsonRejection>,
+) -> Response {
+    let event_type = match event_type {
+        Ok(Json(event_type)) => event_type,
+        Err(_) => return StatusCode::BAD_REQUEST.into_response(),
+    };
+    if domain::validate_event_type(&event_type).is_err() {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+    state.event_types.add(event_type.clone());
+    Json(event_type).into_response()
 }
