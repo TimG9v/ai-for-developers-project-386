@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend test test-backend test-frontend lint lint-backend lint-frontend generate
+.PHONY: dev dev-backend dev-frontend test test-backend test-frontend lint lint-backend lint-frontend generate stop
 
 dev:
 	@cd backend && cargo run &
@@ -15,6 +15,10 @@ generate:
 	cd contracts && npx tsp compile .
 	cd frontend && npm run generate:client
 	cd backend && cargo build
+
+stop:
+	@-fuser -k 3000/tcp 8081/tcp 2>/dev/null
+	@echo "stopped backend (:8081) and frontend (:3000), if they were running"
 
 test: test-backend test-frontend
 
