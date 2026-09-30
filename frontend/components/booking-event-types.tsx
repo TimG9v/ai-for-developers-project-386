@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { slotsList, type EventType, type Slot } from "@/src/client";
 
+import { BookingForm } from "@/components/booking-form";
 import { formatSlotInterval } from "@/lib/slot-time";
 
 /**
- * Страница записи: гость выбирает тип встречи и видит календарь свободных
- * слотов этого типа. Окно 14 дней отсекает сервер — клиент рендерит ответ.
+ * Страница записи: гость выбирает тип встречи, затем свободный слот и
+ * оформляет запись. Окно 14 дней и занятость отсекает сервер — клиент
+ * рендерит только то, что вернул SDK.
  */
 export function BookingEventTypes({
   initialEventTypes,
@@ -19,15 +21,54 @@ export function BookingEventTypes({
     null,
   );
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<{
+    title: string;
+    interval: string;
+    email: string;
+  } | null>(null);
 
   const selectedEventType = initialEventTypes.find(
     (eventType) => eventType.id === selectedEventTypeId,
   );
+  const selectedSlot = slots.find((slot) => slot.id === selectedSlotId) ?? null;
 
-  async function chooseEventType(eventTypeId: string) {
+  const chooseEventType = useCallback(async (eventTypeId: string) => {
     setSelectedEventTypeId(eventTypeId);
+    setSelectedSlotId(null);
+    setConfirmation(null);
     const { data } = await slotsList({ query: { eventTypeId } });
     setSlots(data ?? []);
+  }, []);
+
+  const reloadSlots = useCallback(
+    async (guestEmail: string) => {
+      if (selectedEventTypeId === null) {
+        return;
+      }
+      const slot = slots.find((item) => item.id === selectedSlotId);
+      if (slot) {
+        setConfirmation({
+          title: selectedEventType?.title ?? "встреча",
+          interval: formatSlotInterval(
+            new Date(slot.startDateTime),
+            new Date(slot.endDateTime),
+          ),
+          email: guestEmail,
+        });
+      }
+      // Занятый слот сервер больше не отдаёт — календарь обновляется.
+      const { data } = await slotsList({ query: { eventTypeId: selectedEventTypeId } });
+      setSlots(data ?? []);
+      setSelectedSlotId(null);
+    },
+    [selectedEventTypeId, selectedEventType, slots, selectedSlotId],
+  );
+
+  if (initialEventTypes.length === 0) {
+    return (
+      <p className="text-muted-foreground">Пока нет доступных типов встреч</p>
+    );
   }
 
   return (
@@ -67,9 +108,7 @@ export function BookingEventTypes({
         ))}
       </ul>
 
-      {initialEventTypes.length === 0 ? (
-        <p className="text-muted-foreground">Пока нет доступных типов встреч</p>
-      ) : selectedEventType === undefined ? (
+      {selectedEventType === undefined ? (
         <p className="text-muted-foreground">
           Выберите тип встречи, чтобы увидеть свободные слоты
         </p>
@@ -79,18 +118,52 @@ export function BookingEventTypes({
         </p>
       ) : (
         <ul className="flex w-full flex-col gap-3" aria-label="Свободные слоты">
-          {slots.map((slot) => (
-            <li
-              key={slot.id}
-              className="rounded-xl border bg-card p-4 text-card-foreground"
-            >
-              {formatSlotInterval(
-                new Date(slot.startDateTime),
-                new Date(slot.endDateTime),
-              )}
-            </li>
-          ))}
+          {slots.map((slot) => {
+            const interval = formatSlotInterval(
+              new Date(slot.startDateTime),
+              new Date(slot.endDateTime),
+            );
+            return (
+              <li key={slot.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSlotId(slot.id)}
+                  aria-label={`Записаться на ${interval}`}
+                  className={`w-full rounded-xl border p-4 text-left ${
+                    slot.id === selectedSlotId
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "bg-card text-card-foreground"
+                  }`}
+                >
+                  {interval}
+                </button>
+              </li>
+            );
+          })}
         </ul>
+      )}
+
+      {confirmation && (
+        <div
+          role="status"
+          className="flex w-full flex-col gap-2 rounded-xl border bg-card p-6 text-card-foreground"
+        >
+          <h3 className="text-xl font-semibold">
+            Вы записаны на «{confirmation.title}»
+          </h3>
+          <p className="text-muted-foreground">{confirmation.interval}</p>
+          <p className="text-sm text-muted-foreground">
+            Подтверждение отправлено на {confirmation.email}
+          </p>
+        </div>
+      )}
+
+      {selectedSlot && (
+        <BookingForm
+          slot={selectedSlot}
+          eventType={selectedEventType}
+          onBooked={(guestEmail) => void reloadSlots(guestEmail)}
+        />
       )}
     </div>
   );
