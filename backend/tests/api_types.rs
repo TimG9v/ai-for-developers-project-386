@@ -19,10 +19,9 @@ fn event_type_matches_contract_shape() {
 #[test]
 fn slot_maps_date_time_to_chrono() {
     let raw = r#"{"id":"s1","eventTypeId":"et1","startDateTime":"2026-10-01T10:00:00Z","endDateTime":"2026-10-01T10:30:00Z"}"#;
-    let parsed = backend::api::api_types::Slot::deserialize(
-        &mut serde_json::Deserializer::from_str(raw),
-    )
-    .expect("Slot из формы контракта");
+    let parsed =
+        backend::api::api_types::Slot::deserialize(&mut serde_json::Deserializer::from_str(raw))
+            .expect("Slot из формы контракта");
     assert_eq!(parsed.event_type_id, "et1");
     assert_eq!(
         parsed.start_date_time.to_rfc3339(),
@@ -38,8 +37,7 @@ fn slot_maps_date_time_to_chrono() {
 fn booking_requires_guest_fields() {
     // guestName/guestEmail обязательны (решение карты #6): форма без них — ошибка.
     let raw = r#"{"id":"b1","slotId":"s1","createdAt":"2026-10-01T09:00:00Z"}"#;
-    let result = backend::api::api_types::Booking::deserialize(
-        &mut serde_json::Deserializer::from_str(raw),
-    );
+    let result =
+        backend::api::api_types::Booking::deserialize(&mut serde_json::Deserializer::from_str(raw));
     assert!(result.is_err(), "запись без гостя не должна парситься");
 }

@@ -8,8 +8,7 @@ use std::fs;
 use std::path::PathBuf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let spec_path =
-        PathBuf::from(env::var("CARGO_MANIFEST_DIR")?).join("../openapi/openapi.json");
+    let spec_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?).join("../openapi/openapi.json");
     println!("cargo:rerun-if-changed={}", spec_path.display());
 
     let raw = fs::read_to_string(&spec_path)?;
