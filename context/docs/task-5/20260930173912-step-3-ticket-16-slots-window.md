@@ -75,16 +75,16 @@
 
 ## Проверка (real-run)
 
-| # | Команда | Ожидаемый результат |
-| - | ------- | ------------------- |
-| 1 | `make test` | exit 0; тесты окна и фильтра зелёные |
-| 2 | `make lint` | exit 0 |
-| 3 | `curl -s -X POST :8081/slots -d '{"id":"s1","eventTypeId":"<существующий>","startDateTime":"<завтра 10:00Z>","endDateTime":"<завтра 10:30Z>"}'` | успех |
-| 4 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/slots -d '…startDateTime = сегодня+15 дней…'` | 4xx, не 2xx |
-| 5 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/slots -d '…eventTypeId="nope"…'` | 404 |
-| 6 | `curl -s ':8081/slots?eventTypeId=<id>'` | только слоты этого типа в окне |
-| 7 | `/booking`: выбрать тип | слоты только выбранного типа, окно 14 дней |
-| 8 | `gh api …/issues/16 --jq .state` | `closed` |
+| # | Команда                                                                                                                                         | Ожидаемый результат                        |
+| - | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1 | `make test`                                                                                                                                     | exit 0; тесты окна и фильтра зелёные       |
+| 2 | `make lint`                                                                                                                                     | exit 0                                     |
+| 3 | `curl -s -X POST :8081/slots -d '{"id":"s1","eventTypeId":"<существующий>","startDateTime":"<завтра 10:00Z>","endDateTime":"<завтра 10:30Z>"}'` | успех                                      |
+| 4 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/slots -d '…startDateTime = сегодня+15 дней…'`                                             | 4xx, не 2xx                                |
+| 5 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/slots -d '…eventTypeId="nope"…'`                                                          | 404                                        |
+| 6 | `curl -s ':8081/slots?eventTypeId=<id>'`                                                                                                        | только слоты этого типа в окне             |
+| 7 | `/booking`: выбрать тип                                                                                                                         | слоты только выбранного типа, окно 14 дней |
+| 8 | `gh api …/issues/16 --jq .state`                                                                                                                | `closed`                                   |
 
 ## Коммит
 

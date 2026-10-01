@@ -67,15 +67,15 @@
 
 ## Проверка (real-run)
 
-| # | Команда | Ожидаемый результат |
-| - | ------- | ------------------- |
-| 1 | `make test && make lint` | exit 0 |
-| 2 | `make generate && git status --porcelain` | пусто (генерация воспроизводима) |
-| 3 | приёмочный чек-лист 7 требований | каждый пункт с командой/прогоном |
-| 4 | `gh pr checks <номер>` | все воркфлоу `pass` |
-| 5 | `gh api repos/TimG9v/ai-for-developers-project-386/issues/14 --jq .state` (и 15–18) | все `closed` |
-| 6 | `git diff main…task-5 -- frontend/src/client backend/src/api.rs openapi` | изменения только от перегенерации, ручных правок нет |
-| 7 | `ls context/docs/task-5` | контексты шага на месте |
+| # | Команда                                                                             | Ожидаемый результат                                  |
+| - | ----------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 1 | `make test && make lint`                                                            | exit 0                                               |
+| 2 | `make generate && git status --porcelain`                                           | пусто (генерация воспроизводима)                     |
+| 3 | приёмочный чек-лист 7 требований                                                    | каждый пункт с командой/прогоном                     |
+| 4 | `gh pr checks <номер>`                                                              | все воркфлоу `pass`                                  |
+| 5 | `gh api repos/TimG9v/ai-for-developers-project-386/issues/14 --jq .state` (и 15–18) | все `closed`                                         |
+| 6 | `git diff main…task-5 -- frontend/src/client backend/src/api.rs openapi`            | изменения только от перегенерации, ручных правок нет |
+| 7 | `ls context/docs/task-5`                                                            | контексты шага на месте                              |
 
 ## Коммит
 

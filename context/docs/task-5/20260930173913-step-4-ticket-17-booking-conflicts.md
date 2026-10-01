@@ -84,17 +84,17 @@
 
 ## Проверка (real-run)
 
-| # | Команда | Ожидаемый результат |
-| - | ------- | ------------------- |
-| 1 | `make test` | exit 0; тесты атомарности/конфликтов зелёные |
-| 2 | `make lint` | exit 0 |
-| 3 | `curl -s -X POST :8081/bookings -d '{"id":"b1","slotId":"s1","guestName":"Гость","guestEmail":"g@example.com","createdAt":"<now>"}'` | 2xx, запись создана |
-| 4 | повтор команды 3 (другой id гостя) | 409 |
-| 5 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/bookings -d '…slotId="nope"…'` | 404 |
-| 6 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/bookings -d '…guestName:""…'` | 4xx, не 2xx |
-| 7 | `curl -s ':8081/slots?eventTypeId=<id>'` после записи | слот s1 больше не отдаётся |
-| 8 | `/booking` в браузере: полный гостевой флоу до подтверждения | сценарий проходит; занятый слот не выбирается |
-| 9 | `gh api …/issues/17 --jq .state` | `closed` |
+| # | Команда                                                                                                                              | Ожидаемый результат                           |
+| - | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| 1 | `make test`                                                                                                                          | exit 0; тесты атомарности/конфликтов зелёные  |
+| 2 | `make lint`                                                                                                                          | exit 0                                        |
+| 3 | `curl -s -X POST :8081/bookings -d '{"id":"b1","slotId":"s1","guestName":"Гость","guestEmail":"g@example.com","createdAt":"<now>"}'` | 2xx, запись создана                           |
+| 4 | повтор команды 3 (другой id гостя)                                                                                                   | 409                                           |
+| 5 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/bookings -d '…slotId="nope"…'`                                                 | 404                                           |
+| 6 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/bookings -d '…guestName:""…'`                                                  | 4xx, не 2xx                                   |
+| 7 | `curl -s ':8081/slots?eventTypeId=<id>'` после записи                                                                                | слот s1 больше не отдаётся                    |
+| 8 | `/booking` в браузере: полный гостевой флоу до подтверждения                                                                         | сценарий проходит; занятый слот не выбирается |
+| 9 | `gh api …/issues/17 --jq .state`                                                                                                     | `closed`                                      |
 
 ## Коммит
 

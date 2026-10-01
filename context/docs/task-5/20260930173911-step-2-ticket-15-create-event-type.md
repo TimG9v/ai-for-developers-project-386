@@ -85,16 +85,16 @@
 
 ## Проверка (real-run)
 
-| # | Команда | Ожидаемый результат |
-| - | ------- | ------------------- |
-| 1 | `make test` | exit 0; тесты create + валидации зелёные |
-| 2 | `make lint` | exit 0 |
-| 3 | `curl -s -X POST :8081/event-types -d '{"id":"et2","title":"Созвон","durationMinutes":15}'` (с content-type) | успех; затем `GET /event-types` содержит `Созвон` |
-| 4 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/event-types -d '{"id":"et3","title":"","durationMinutes":30}'` | 4xx (код по решению сессии), не 2xx |
-| 5 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/event-types -d '{"id":"et4","title":"X","durationMinutes":0}'` | 4xx, не 2xx |
-| 6 | `/admin` в браузере: создать тип → открыть `/booking` | новый тип виден гостю |
-| 7 | `git diff` по сгенерированным путям | изменения только если `make generate` запускался из-за контракта; ручных правок нет |
-| 8 | `gh api …/issues/15 --jq .state` | `closed` |
+| # | Команда                                                                                                              | Ожидаемый результат                                                                 |
+| - | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 1 | `make test`                                                                                                          | exit 0; тесты create + валидации зелёные                                            |
+| 2 | `make lint`                                                                                                          | exit 0                                                                              |
+| 3 | `curl -s -X POST :8081/event-types -d '{"id":"et2","title":"Созвон","durationMinutes":15}'` (с content-type)         | успех; затем `GET /event-types` содержит `Созвон`                                   |
+| 4 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/event-types -d '{"id":"et3","title":"","durationMinutes":30}'` | 4xx (код по решению сессии), не 2xx                                                 |
+| 5 | `curl -s -o /dev/null -w '%{http_code}' -X POST :8081/event-types -d '{"id":"et4","title":"X","durationMinutes":0}'` | 4xx, не 2xx                                                                         |
+| 6 | `/admin` в браузере: создать тип → открыть `/booking`                                                                | новый тип виден гостю                                                               |
+| 7 | `git diff` по сгенерированным путям                                                                                  | изменения только если `make generate` запускался из-за контракта; ручных правок нет |
+| 8 | `gh api …/issues/15 --jq .state`                                                                                     | `closed`                                                                            |
 
 ## Коммит
 
