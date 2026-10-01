@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BookingsCreateData, BookingsCreateErrors, BookingsCreateResponses, BookingsListData, BookingsListResponses, EventTypesCreateData, EventTypesCreateErrors, EventTypesCreateResponses, EventTypesListData, EventTypesListResponses, SlotsCreateData, SlotsCreateErrors, SlotsCreateResponses, SlotsListData, SlotsListResponses } from './types.gen';
+import type { BookingsCreateData, BookingsCreateErrors, BookingsCreateResponses, BookingsListData, BookingsListResponses, EventTypesCreateData, EventTypesCreateErrors, EventTypesCreateResponses, EventTypesListData, EventTypesListResponses, SlotsCreateData, SlotsCreateErrors, SlotsCreateResponses, SlotsListData, SlotsListResponses, UpcomingMeetingsListData, UpcomingMeetingsListResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -50,3 +50,5 @@ export const slotsCreate = <ThrowOnError extends boolean = false>(options: Optio
         ...options.headers
     }
 });
+
+export const upcomingMeetingsList = <ThrowOnError extends boolean = false>(options?: Options<UpcomingMeetingsListData, ThrowOnError>): RequestResult<UpcomingMeetingsListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<UpcomingMeetingsListResponses, unknown, ThrowOnError>({ url: '/upcoming-meetings', ...options });

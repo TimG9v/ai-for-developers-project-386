@@ -38,6 +38,18 @@ namespace Booking {
     createdAt: utcDateTime;
   }
 
+  @doc("Предстоящая встреча: ракурс владельца — запись со временем слота и типом встречи.")
+  model UpcomingMeeting {
+    id: string;
+    slotId: string;
+    guestName: string;
+    guestEmail: string;
+    startDateTime: utcDateTime;
+    endDateTime: utcDateTime;
+    eventTypeId: string;
+    eventTitle: string;
+  }
+
   @doc("Слот уже занят: на слот не может быть более одной записи.")
   model ConflictError {
     @statusCode statusCode: 409;
@@ -72,5 +84,11 @@ namespace Booking {
   interface Bookings {
     @get list(): Booking[];
     @post create(@body body: Booking): Booking | ConflictError | NotFoundError | ValidationError;
+  }
+
+  @doc("Предстоящие встречи: записи со временем слота и типом встречи; прошедшие не отдаются.")
+  @route("/upcoming-meetings")
+  interface UpcomingMeetings {
+    @get list(): UpcomingMeeting[];
   }
 }
