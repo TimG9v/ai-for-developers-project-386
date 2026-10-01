@@ -21,9 +21,27 @@ git clone https://github.com/TimG9v/ai-for-developers-project-386.git
 cd ai-for-developers-project-386
 ```
 
+Локальный запуск без Docker (нужны Rust и Node из `.tool-versions`/`.nvmrc`):
+
+```bash
+make dev   # backend на :8081, frontend на :3000
+```
+
 ## Использование
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+Опубликованное приложение: **https://calendar-zvonok.onrender.com**
+
+Тот же образ локально — приложение поднимает backend и frontend само и
+отвечает на порту из переменной окружения `PORT`:
+
+```bash
+docker build -t calendar .
+docker run -e PORT=8080 -p 8080:8080 calendar
+```
+
+После запуска: `http://127.0.0.1:8080` — главная, `/booking` — страница
+записи, `/admin` — страница владельца, `/health` — статус. Данные
+хранятся в памяти и обнуляются при перезапуске контейнера.
 
 ---
 
