@@ -10,7 +10,6 @@ vi.mock("@/src/client", () => ({
 
 import Page from "@/app/admin/page";
 
-// Локальные компоненты — рендер и ожидание в одной зоне, тест стабилен на CI.
 const slotStart = new Date(2026, 10, 15, 10, 0);
 const slotEnd = new Date(2026, 10, 15, 10, 30);
 const pastStart = new Date(2025, 0, 1, 10, 0);
