@@ -4,6 +4,10 @@ import { useState, type FormEvent } from "react";
 
 import { eventTypesCreate, eventTypesList, type EventType } from "@/src/client";
 
+// Same-origin конфиг SDK для браузера (тикет #20): без этого импорта
+// клиентский синглтон остаётся с пустым baseUrl — fetch уходит мимо /api.
+import "@/src/api-config";
+
 /**
  * Раздел владельца: форма создания типа встречи и список уже созданных.
  * Начальный список приходит из серверного компонента; после создания

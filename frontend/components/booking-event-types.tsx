@@ -4,6 +4,9 @@ import { useCallback, useState } from "react";
 
 import { slotsList, type EventType, type Slot } from "@/src/client";
 
+// Same-origin конфиг SDK для браузера (тикет #20) — см. admin-event-types.
+import "@/src/api-config";
+
 import { BookingForm } from "@/components/booking-form";
 import { formatSlotInterval } from "@/lib/slot-time";
 

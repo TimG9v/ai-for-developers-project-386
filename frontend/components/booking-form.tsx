@@ -4,6 +4,9 @@ import { useState, type FormEvent } from "react";
 
 import { bookingsCreate, type Slot } from "@/src/client";
 
+// Same-origin конфиг SDK для браузера (тикет #20) — см. admin-event-types.
+import "@/src/api-config";
+
 import { formatSlotInterval } from "@/lib/slot-time";
 
 type BookingFormError = "empty-fields";

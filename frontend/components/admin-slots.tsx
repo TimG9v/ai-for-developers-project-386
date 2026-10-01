@@ -4,6 +4,9 @@ import { useState, type FormEvent } from "react";
 
 import { slotsCreate, type EventType } from "@/src/client";
 
+// Same-origin конфиг SDK для браузера (тикет #20) — см. admin-event-types.
+import "@/src/api-config";
+
 /**
  * Публикация слота владельцем: выбор типа встречи, дата и время начала.
  * Конец интервала вычисляется из длительности выбранного типа.

@@ -17,6 +17,12 @@ use serde::{Deserialize, Serialize};
 use crate::api::api_types::{Booking, EventType, Slot};
 use crate::domain::{BookingsRepository, EventTypesRepository, SlotsRepository};
 
+/// Адрес для `TcpListener::bind`: loopback, порт из `BACKEND_PORT`
+/// (дефолт 8081). `PORT` — не здесь: это публичный порт Next.js в контейнере.
+pub fn bind_addr(backend_port: Option<&str>) -> String {
+    format!("127.0.0.1:{}", backend_port.unwrap_or("8081"))
+}
+
 /// Состояние приложения: репозитории, с которыми собран роутер.
 #[derive(Clone)]
 pub struct AppState {
@@ -181,4 +187,19 @@ async fn create_booking(
         return StatusCode::CONFLICT.into_response();
     }
     Json(booking).into_response()
+}
+
+#[cfg(test)]
+mod bind_addr_tests {
+    use super::bind_addr;
+
+    #[test]
+    fn default_is_loopback_8081() {
+        assert_eq!(bind_addr(None), "127.0.0.1:8081");
+    }
+
+    #[test]
+    fn backend_port_overrides_default() {
+        assert_eq!(bind_addr(Some("9000")), "127.0.0.1:9000");
+    }
 }
