@@ -102,4 +102,8 @@ impl BookingsRepository for InMemoryBookings {
             .iter()
             .any(|booking| booking.slot_id == slot_id)
     }
+
+    fn list(&self) -> Vec<Booking> {
+        self.items.lock().expect("bookings lock").clone()
+    }
 }

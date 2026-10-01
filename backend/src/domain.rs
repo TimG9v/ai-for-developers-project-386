@@ -52,6 +52,9 @@ pub trait BookingsRepository: Send + Sync {
 
     /// Занят ли слот какой-либо записью.
     fn contains_slot(&self, slot_id: &str) -> bool;
+
+    /// Все записи — ракурс владельца (история 4).
+    fn list(&self) -> Vec<Booking>;
 }
 
 /// Слот виден в календаре записи, только если начинается в окне 14 дней:

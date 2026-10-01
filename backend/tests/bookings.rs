@@ -205,3 +205,47 @@ fn in_memory_bookings_try_add_is_insert_if_absent() {
     assert!(bookings.try_add(booking.clone()));
     assert!(!bookings.try_add(booking));
 }
+
+#[tokio::test]
+async fn bookings_list_returns_bookings_of_all_types() {
+    // Ракурс владельца: записи на слоты разных типов — в одном списке.
+    let state = seeded_state();
+    state.bookings.try_add(Booking {
+        id: "b1".to_string(),
+        slot_id: "s1".to_string(),
+        guest_name: "Первый".to_string(),
+        guest_email: "first@example.com".to_string(),
+        created_at: Utc::now(),
+    });
+    state.bookings.try_add(Booking {
+        id: "b2".to_string(),
+        slot_id: "s2".to_string(),
+        guest_name: "Второй".to_string(),
+        guest_email: "second@example.com".to_string(),
+        created_at: Utc::now(),
+    });
+    let app = backend::app_with_state(state);
+
+    let raw = common::send(app, &common::get_request("/bookings")).await;
+
+    assert!(raw.contains("HTTP/1.1 200"), "got: {raw}");
+    let items: serde_json::Value =
+        serde_json::from_str(common::response_body(&raw)).expect("JSON-тело");
+    let items = items.as_array().expect("Booking[]");
+    assert_eq!(items.len(), 2);
+    let slot_ids: Vec<&str> = items
+        .iter()
+        .map(|booking| booking["slotId"].as_str().expect("slotId"))
+        .collect();
+    assert_eq!(slot_ids, vec!["s1", "s2"], "записи всех типов: {items:?}");
+    assert_eq!(items[0]["guestName"], "Первый");
+    assert_eq!(items[1]["guestEmail"], "second@example.com");
+}
+
+#[tokio::test]
+async fn bookings_list_on_empty_storage_returns_empty_array() {
+    let raw = common::send(backend::app(), &common::get_request("/bookings")).await;
+
+    assert!(raw.contains("HTTP/1.1 200"), "got: {raw}");
+    assert_eq!(common::response_body(&raw).trim(), "[]");
+}

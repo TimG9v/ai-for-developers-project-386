@@ -9,7 +9,7 @@ use axum::{
     extract::{Query, State, rejection::JsonRejection},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::get,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -48,7 +48,8 @@ pub fn app_with_state(state: AppState) -> Router {
             get(list_event_types).post(create_event_type),
         )
         .route("/slots", get(list_slots).post(create_slot))
-        .route("/bookings", post(create_booking))
+        .route("/bookings", get(list_bookings).post(create_booking))
+        .route("/upcoming-meetings", get(list_upcoming_meetings))
         .with_state(state)
 }
 
@@ -121,6 +122,42 @@ async fn create_slot(
     }
     state.slots.add(slot.clone());
     Json(slot).into_response()
+}
+
+/// Список записей — ракурс владельца (история 4); без охраны (ADR 0002).
+async fn list_bookings(State(state): State<AppState>) -> Json<Vec<Booking>> {
+    Json(state.bookings.list())
+}
+
+/// Предстоящие встречи владельца (истории 4–5): записи со временем слота
+/// и типом встречи одним ответом; прошедшие слоты не отдаются.
+async fn list_upcoming_meetings(
+    State(state): State<AppState>,
+) -> Json<Vec<api::api_types::UpcomingMeeting>> {
+    let now: DateTime<Utc> = Utc::now();
+    let meetings = state
+        .bookings
+        .list()
+        .into_iter()
+        .filter_map(|booking| {
+            let slot = state.slots.get(&booking.slot_id)?;
+            if slot.start_date_time < now {
+                return None;
+            }
+            let event_type = state.event_types.get(&slot.event_type_id)?;
+            Some(api::api_types::UpcomingMeeting {
+                id: booking.id,
+                slot_id: slot.id,
+                guest_name: booking.guest_name,
+                guest_email: booking.guest_email,
+                start_date_time: slot.start_date_time,
+                end_date_time: slot.end_date_time,
+                event_type_id: event_type.id,
+                event_title: event_type.title,
+            })
+        })
+        .collect();
+    Json(meetings)
 }
 
 /// Запись гостя на слот. Несуществующий слот — контрактный 404, пустое
