@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BookingsCreateData, BookingsCreateErrors, BookingsCreateResponses, BookingsListData, BookingsListResponses, EventTypesCreateData, EventTypesCreateResponses, EventTypesListData, EventTypesListResponses, SlotsCreateData, SlotsCreateResponses, SlotsListData, SlotsListResponses } from './types.gen';
+import type { BookingsCreateData, BookingsCreateErrors, BookingsCreateResponses, BookingsListData, BookingsListResponses, EventTypesCreateData, EventTypesCreateErrors, EventTypesCreateResponses, EventTypesListData, EventTypesListResponses, SlotsCreateData, SlotsCreateErrors, SlotsCreateResponses, SlotsListData, SlotsListResponses, UpcomingMeetingsListData, UpcomingMeetingsListResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -31,7 +31,7 @@ export const bookingsCreate = <ThrowOnError extends boolean = false>(options: Op
 
 export const eventTypesList = <ThrowOnError extends boolean = false>(options?: Options<EventTypesListData, ThrowOnError>): RequestResult<EventTypesListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<EventTypesListResponses, unknown, ThrowOnError>({ url: '/event-types', ...options });
 
-export const eventTypesCreate = <ThrowOnError extends boolean = false>(options: Options<EventTypesCreateData, ThrowOnError>): RequestResult<EventTypesCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<EventTypesCreateResponses, unknown, ThrowOnError>({
+export const eventTypesCreate = <ThrowOnError extends boolean = false>(options: Options<EventTypesCreateData, ThrowOnError>): RequestResult<EventTypesCreateResponses, EventTypesCreateErrors, ThrowOnError> => (options.client ?? client).post<EventTypesCreateResponses, EventTypesCreateErrors, ThrowOnError>({
     url: '/event-types',
     ...options,
     headers: {
@@ -42,7 +42,7 @@ export const eventTypesCreate = <ThrowOnError extends boolean = false>(options: 
 
 export const slotsList = <ThrowOnError extends boolean = false>(options?: Options<SlotsListData, ThrowOnError>): RequestResult<SlotsListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<SlotsListResponses, unknown, ThrowOnError>({ url: '/slots', ...options });
 
-export const slotsCreate = <ThrowOnError extends boolean = false>(options: Options<SlotsCreateData, ThrowOnError>): RequestResult<SlotsCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<SlotsCreateResponses, unknown, ThrowOnError>({
+export const slotsCreate = <ThrowOnError extends boolean = false>(options: Options<SlotsCreateData, ThrowOnError>): RequestResult<SlotsCreateResponses, SlotsCreateErrors, ThrowOnError> => (options.client ?? client).post<SlotsCreateResponses, SlotsCreateErrors, ThrowOnError>({
     url: '/slots',
     ...options,
     headers: {
@@ -50,3 +50,5 @@ export const slotsCreate = <ThrowOnError extends boolean = false>(options: Optio
         ...options.headers
     }
 });
+
+export const upcomingMeetingsList = <ThrowOnError extends boolean = false>(options?: Options<UpcomingMeetingsListData, ThrowOnError>): RequestResult<UpcomingMeetingsListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<UpcomingMeetingsListResponses, unknown, ThrowOnError>({ url: '/upcoming-meetings', ...options });

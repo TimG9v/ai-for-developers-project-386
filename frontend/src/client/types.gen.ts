@@ -50,6 +50,20 @@ export type Slot = {
     endDateTime: string;
 };
 
+/**
+ * Предстоящая встреча: ракурс владельца — запись со временем слота и типом встречи.
+ */
+export type UpcomingMeeting = {
+    id: string;
+    slotId: string;
+    guestName: string;
+    guestEmail: string;
+    startDateTime: string;
+    endDateTime: string;
+    eventTypeId: string;
+    eventTitle: string;
+};
+
 export type BookingsListData = {
     body?: never;
     path?: never;
@@ -74,6 +88,10 @@ export type BookingsCreateData = {
 };
 
 export type BookingsCreateErrors = {
+    /**
+     * Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.
+     */
+    400: unknown;
     /**
      * Слот или тип встречи не найдены.
      */
@@ -116,6 +134,13 @@ export type EventTypesCreateData = {
     url: '/event-types';
 };
 
+export type EventTypesCreateErrors = {
+    /**
+     * Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.
+     */
+    400: unknown;
+};
+
 export type EventTypesCreateResponses = {
     /**
      * The request has succeeded.
@@ -150,6 +175,17 @@ export type SlotsCreateData = {
     url: '/slots';
 };
 
+export type SlotsCreateErrors = {
+    /**
+     * Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.
+     */
+    400: unknown;
+    /**
+     * Слот или тип встречи не найдены.
+     */
+    404: unknown;
+};
+
 export type SlotsCreateResponses = {
     /**
      * The request has succeeded.
@@ -158,3 +194,19 @@ export type SlotsCreateResponses = {
 };
 
 export type SlotsCreateResponse = SlotsCreateResponses[keyof SlotsCreateResponses];
+
+export type UpcomingMeetingsListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/upcoming-meetings';
+};
+
+export type UpcomingMeetingsListResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<UpcomingMeeting>;
+};
+
+export type UpcomingMeetingsListResponse = UpcomingMeetingsListResponses[keyof UpcomingMeetingsListResponses];

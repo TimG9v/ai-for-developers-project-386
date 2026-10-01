@@ -27,6 +27,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
+        '400':
+          description: 'Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.'
         '404':
           description: Слот или тип встречи не найдены.
         '409':
@@ -60,6 +62,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventType'
+        '400':
+          description: 'Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.'
       requestBody:
         required: true
         content:
@@ -95,12 +99,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Slot'
+        '400':
+          description: 'Невалидный ввод: обязательные поля пусты или значения вне допустимых границ.'
+        '404':
+          description: Слот или тип встречи не найдены.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Slot'
+  /upcoming-meetings:
+    get:
+      operationId: UpcomingMeetings_list
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UpcomingMeeting'
 components:
   schemas:
     Booking:
@@ -165,3 +186,34 @@ components:
           type: string
           format: date-time
       description: 'Слот: свободный интервал, опубликованный владельцем; длительность определяется типом встречи.'
+    UpcomingMeeting:
+      type: object
+      required:
+        - id
+        - slotId
+        - guestName
+        - guestEmail
+        - startDateTime
+        - endDateTime
+        - eventTypeId
+        - eventTitle
+      properties:
+        id:
+          type: string
+        slotId:
+          type: string
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        startDateTime:
+          type: string
+          format: date-time
+        endDateTime:
+          type: string
+          format: date-time
+        eventTypeId:
+          type: string
+        eventTitle:
+          type: string
+      description: 'Предстоящая встреча: ракурс владельца — запись со временем слота и типом встречи.'
