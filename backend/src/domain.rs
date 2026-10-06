@@ -64,17 +64,28 @@ pub fn is_within_booking_window(start: DateTime<Utc>, now: DateTime<Utc>) -> boo
     start >= now && start <= now + Duration::days(BOOKING_WINDOW_DAYS)
 }
 
+/// Шаг сетки начала слота — 30 минут (обязательное требование проекта).
+const SLOT_GRID_SECONDS: i64 = 30 * 60;
+
+/// Начало слота на 30-минутной сетке: …:00 / …:30, секунды и доли — ноль.
+/// Суб-секунды проверяются отдельно: timestamp() их отбрасывает.
+pub fn is_on_grid(start: DateTime<Utc>) -> bool {
+    start.timestamp_subsec_nanos() == 0 && start.timestamp().rem_euclid(SLOT_GRID_SECONDS) == 0
+}
+
 /// Причины отклонения слота сервером.
 #[derive(Debug)]
 pub enum SlotValidationError {
     EndBeforeStart,
     OutsideBookingWindow,
     DurationMismatch,
+    OffGridStart,
 }
 
 /// Серверная валидация слота: интервал непустой, начало в окне 14 дней,
 /// длительность интервала равна длительности типа встречи
-/// (словарь: «длительность слота определяется его типом встречи»).
+/// (словарь: «длительность слота определяется его типом встречи»),
+/// начало на 30-минутной сетке.
 pub fn validate_slot(
     slot: &Slot,
     now: DateTime<Utc>,
@@ -89,6 +100,9 @@ pub fn validate_slot(
     let actual_minutes = (slot.end_date_time - slot.start_date_time).num_minutes();
     if actual_minutes != i64::from(event_type.duration_minutes) {
         return Err(SlotValidationError::DurationMismatch);
+    }
+    if !is_on_grid(slot.start_date_time) {
+        return Err(SlotValidationError::OffGridStart);
     }
     Ok(())
 }
