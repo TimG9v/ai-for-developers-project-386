@@ -1,6 +1,7 @@
-//! HTTP-шов: запись гостя на слот. Атомарность слота (одна Запись на Слот),
-//! конфликты 409, несуществующий слот 404, обязательность гостя 400,
-//! единое окно 14 дней. Занятые слоты исчезают из календаря.
+//! HTTP-шов: запись гостя на слот. Атомарность интервала (записи не
+//! пересекаются по времени, ADR 0003), конфликты 409, несуществующий слот
+//! 404, обязательность гостя 400, единое окно 14 дней. Слоты, занятые по
+//! времени, исчезают из календаря.
 
 mod common;
 
@@ -115,6 +116,32 @@ async fn bookings_create_second_booking_on_same_slot_returns_409() {
 }
 
 #[tokio::test]
+async fn slots_list_hides_slots_overlapping_booked_interval() {
+    // ADR 0003 в read-пути: календарь не предлагает слоты, чей интервал
+    // пересекается с занятым, — даже слоты других типов; стык остаётся видим.
+    let app = backend::app_with_state(seeded_state());
+    seed_booking(&app, "b1", "s1").await; // et1: start..start+30
+
+    let raw = common::send(app, &common::get_request("/slots?eventTypeId=et2")).await;
+    let items: serde_json::Value =
+        serde_json::from_str(common::response_body(&raw)).expect("JSON-тело");
+    let ids: Vec<&str> = items
+        .as_array()
+        .expect("Slot[]")
+        .iter()
+        .map(|slot| slot["id"].as_str().expect("id"))
+        .collect();
+    assert!(
+        !ids.contains(&"s2"),
+        "пересекающийся с бронью слот скрыт из календаря: {items}"
+    );
+    assert!(
+        ids.contains(&"s4"),
+        "слот, стыкующийся с бронью, доступен: {items}"
+    );
+}
+
+#[tokio::test]
 async fn bookings_create_on_overlapping_slot_of_other_event_type_returns_409() {
     // ADR 0003: занятость времени не зависит от типа встречи — слот другого
     // типа с пересекающимся интервалом отклоняется 409.
@@ -225,7 +252,7 @@ async fn bookings_create_rejects_slot_outside_window_with_400() {
 
 #[test]
 fn in_memory_bookings_try_add_is_insert_if_absent() {
-    // Атомарность слота: проверка занятости и вставка — единая операция.
+    // Атомарность интервала: проверка занятости и вставка — единая операция.
     let bookings = InMemoryBookings::new();
     let booking = |id: &str, slot_id: &str| Booking {
         id: id.to_string(),

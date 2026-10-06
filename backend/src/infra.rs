@@ -119,6 +119,14 @@ impl BookingsRepository for InMemoryBookings {
             .any(|record| record.booking.slot_id == slot_id)
     }
 
+    fn is_interval_taken(&self, start: DateTime<Utc>, end: DateTime<Utc>) -> bool {
+        self.items
+            .lock()
+            .expect("bookings lock")
+            .iter()
+            .any(|record| record.start < end && start < record.end)
+    }
+
     fn list(&self) -> Vec<Booking> {
         self.items
             .lock()

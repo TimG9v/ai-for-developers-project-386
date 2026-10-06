@@ -92,7 +92,7 @@ struct SlotsQuery {
 }
 
 /// Календарь записи: свободные слоты выбранного типа в окне 14 дней;
-/// занятые (с записью) не отдаются (история 14).
+/// занятые по времени не отдаются (история 14, ADR 0003).
 async fn list_slots(State(state): State<AppState>, query: Query<SlotsQuery>) -> Json<Vec<Slot>> {
     let now: DateTime<Utc> = Utc::now();
     let slots = state
@@ -106,7 +106,11 @@ async fn list_slots(State(state): State<AppState>, query: Query<SlotsQuery>) -> 
                 .is_none_or(|id| slot.event_type_id == id)
         })
         .filter(|slot| domain::is_within_booking_window(slot.start_date_time, now))
-        .filter(|slot| !state.bookings.contains_slot(&slot.id))
+        .filter(|slot| {
+            !state
+                .bookings
+                .is_interval_taken(slot.start_date_time, slot.end_date_time)
+        })
         .collect();
     Json(slots)
 }
