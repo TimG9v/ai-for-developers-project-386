@@ -3,6 +3,8 @@
 
 use std::sync::Mutex;
 
+use chrono::{DateTime, Utc};
+
 use crate::api::api_types::{Booking, EventType, Slot};
 use crate::domain::{BookingsRepository, EventTypesRepository, SlotsRepository};
 
@@ -69,9 +71,18 @@ impl SlotsRepository for InMemorySlots {
     }
 }
 
+/// Запись с интервалом её слота: интервал нужен атомарной проверке
+/// занятости времени; времена слота неизменяемы, поэтому фиксируются
+/// в момент записи (ADR 0003).
+struct BookingRecord {
+    booking: Booking,
+    start: DateTime<Utc>,
+    end: DateTime<Utc>,
+}
+
 #[derive(Default)]
 pub struct InMemoryBookings {
-    items: Mutex<Vec<Booking>>,
+    items: Mutex<Vec<BookingRecord>>,
 }
 
 impl InMemoryBookings {
@@ -81,17 +92,22 @@ impl InMemoryBookings {
 }
 
 impl BookingsRepository for InMemoryBookings {
-    fn try_add(&self, booking: Booking) -> bool {
-        // Проверка занятости и вставка — под одной блокировкой:
-        // два одновременных запроса не создадут вторую запись.
+    fn try_add(&self, booking: Booking, slot: &Slot) -> bool {
+        // Проверка занятости интервала и вставка — под одной блокировкой:
+        // два одновременных запроса (в т.ч. на слоты разных типов с одним
+        // временем) не создадут пересекающиеся записи.
         let mut items = self.items.lock().expect("bookings lock");
-        if items
+        let overlaps = items
             .iter()
-            .any(|existing| existing.slot_id == booking.slot_id)
-        {
+            .any(|existing| intervals_overlap(existing.start, existing.end, slot));
+        if overlaps {
             return false;
         }
-        items.push(booking);
+        items.push(BookingRecord {
+            booking,
+            start: slot.start_date_time,
+            end: slot.end_date_time,
+        });
         true
     }
 
@@ -100,10 +116,21 @@ impl BookingsRepository for InMemoryBookings {
             .lock()
             .expect("bookings lock")
             .iter()
-            .any(|booking| booking.slot_id == slot_id)
+            .any(|record| record.booking.slot_id == slot_id)
     }
 
     fn list(&self) -> Vec<Booking> {
-        self.items.lock().expect("bookings lock").clone()
+        self.items
+            .lock()
+            .expect("bookings lock")
+            .iter()
+            .map(|record| record.booking.clone())
+            .collect()
     }
+}
+
+/// Пересечение полуоткрытых интервалов [start, end): стык (end == start
+/// соседнего) пересечением не считается.
+fn intervals_overlap(start: DateTime<Utc>, end: DateTime<Utc>, slot: &Slot) -> bool {
+    start < slot.end_date_time && slot.start_date_time < end
 }
