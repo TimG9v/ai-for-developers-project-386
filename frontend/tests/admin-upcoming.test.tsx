@@ -12,10 +12,7 @@ import Page from "@/app/admin/page";
 
 const slotStart = new Date(2026, 10, 15, 10, 0);
 const slotEnd = new Date(2026, 10, 15, 10, 30);
-const pastStart = new Date(2025, 0, 1, 10, 0);
-const pastEnd = new Date(2025, 0, 1, 10, 30);
 
-const EVENT_TYPES = [{ id: "et1", title: "Созвон", durationMinutes: 30 }];
 const MEETING = {
   id: "b1",
   slotId: "s1",
