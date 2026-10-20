@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/TimG9v/ai-for-developers-project-386/compare/v0.2.0...v0.2.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **frontend:** обновить next до 16.4.2 и вынести shadcn в devDependencies ([ee0e70a](https://github.com/TimG9v/ai-for-developers-project-386/commit/ee0e70ad666739652e79b74c6b7124f4f04d0403))
+* **frontend:** обновить next до 16.4.2 и вынести shadcn в devDependencies ([6d91de2](https://github.com/TimG9v/ai-for-developers-project-386/commit/6d91de2158ee496c03c600c6d855595260bf3e5b))
+
 ## [0.2.0](https://github.com/TimG9v/ai-for-developers-project-386/compare/v0.1.0...v0.2.0) (2026-10-07)
 
 
